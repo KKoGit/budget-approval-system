@@ -84,7 +84,7 @@ public class BudgetRequest
         };
 
         request.Record(AuditAction.Created, null, requester, null,
-            Invariant($"Requested {requestedAmount:N2} for {category}"), nowUtc);
+            $"Requested {Display.Money(requestedAmount)} for {Display.Category(category)}", nowUtc);
         return request;
     }
 
@@ -104,9 +104,9 @@ public class BudgetRequest
         var (cleanTitle, cleanJustification) = ValidateDetails(title, justification, requestedAmount);
 
         var changes = new StringBuilder();
-        if (category != Category) Append(changes, Invariant($"Category: {Category} → {category}"));
+        if (category != Category) Append(changes, $"Category: {Display.Category(Category)} → {Display.Category(category)}");
         if (cleanTitle != Title) Append(changes, $"Title: \"{Title}\" → \"{cleanTitle}\"");
-        if (requestedAmount != RequestedAmount) Append(changes, Invariant($"Amount: {RequestedAmount:N2} → {requestedAmount:N2}"));
+        if (requestedAmount != RequestedAmount) Append(changes, $"Amount: {Display.Money(RequestedAmount)} → {Display.Money(requestedAmount)}");
         if (cleanJustification != Justification) Append(changes, "Justification revised");
 
         if (changes.Length == 0) return; // Nothing changed: no audit noise, no new version.
@@ -145,7 +145,7 @@ public class BudgetRequest
 
         if (approvedAmount <= 0 || approvedAmount > RequestedAmount)
             throw new BusinessRuleException(RuleCodes.ApprovedAmountInvalid,
-                Invariant($"The approved amount must be greater than zero and no more than the requested {RequestedAmount:N2}."));
+                $"The approved amount must be greater than zero and no more than the requested {Display.Money(RequestedAmount)}.");
 
         var cleanComment = NormalizeComment(comment);
         if (approvedAmount < RequestedAmount && cleanComment is null)
@@ -154,7 +154,7 @@ public class BudgetRequest
 
         ApprovedAmount = approvedAmount;
         Decide(RequestStatus.Approved, AuditAction.Approved, approver, cleanComment,
-            approvedAmount == RequestedAmount ? null : Invariant($"Approved {approvedAmount:N2} of {RequestedAmount:N2}"),
+            approvedAmount == RequestedAmount ? null : $"Approved {Display.Money(approvedAmount)} of {Display.Money(RequestedAmount)}",
             nowUtc);
     }
 
@@ -231,7 +231,7 @@ public class BudgetRequest
 
         if (amount > MaxRequestAmount)
             throw new BusinessRuleException(RuleCodes.AmountExceedsPolicyLimit,
-                Invariant($"A single request cannot exceed {MaxRequestAmount:N0}. Split the need or use capital planning."));
+                Invariant($"A single request cannot exceed ${MaxRequestAmount:N0}. Split the need or use capital planning."));
 
         if (decimal.Round(amount, 2) != amount)
             throw new BusinessRuleException(RuleCodes.AmountPrecision, "Amounts can have at most two decimal places.");

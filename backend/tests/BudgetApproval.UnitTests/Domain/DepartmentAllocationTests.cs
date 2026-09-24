@@ -13,7 +13,7 @@ public class DepartmentAllocationTests
         allocation.CommitApproval(460_000m);
 
         var ex = AssertRule(RuleCodes.AllocationExceeded, () => allocation.CommitApproval(75_000m));
-        Assert.Contains("40,000.00", ex.Message);
+        Assert.Contains("Only $40,000.00 remains", ex.Message);
         Assert.Equal(460_000m, allocation.ApprovedAmount); // unchanged after the failed attempt
     }
 

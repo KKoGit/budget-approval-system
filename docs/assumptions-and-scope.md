@@ -4,7 +4,7 @@
 
 Departments of a mid-sized public agency request operating funds during the year. Today requests travel by e-mail and spreadsheet; the Budget Office cannot see how much of each department's allocation is already committed, decisions are hard to trace, and two reviewers occasionally act on the same request. This slice replaces that with one workflow, one source of truth for the numbers, and a complete audit trail.
 
-All organisations, people and figures in the repository are fictional (the "Asencilla Regional Services Agency").
+All organisations, people and figures in the repository are fictional (the "Ascencilla Regional Services Agency").
 
 ## Users
 

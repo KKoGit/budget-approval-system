@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 namespace BudgetApproval.Infrastructure.Persistence;
 
 /// <summary>
-/// Seeds a fictional agency, the Asencilla Regional Services Agency. All names, amounts and
+/// Seeds a fictional agency, the Ascencilla Regional Services Agency. All names, amounts and
 /// e-mail addresses are invented.
 /// <para>
 /// Requests are created by calling the same domain methods the API uses (Create → Submit → Approve …),
@@ -133,13 +133,13 @@ public static class DbSeeder
             "Replaces three separate survey tools with one platform that meets accessibility and data-residency requirements.",
             120_000m, 6, 5);
 
-        // FY2027 — planning cycle for the year starting 1 October.
+        // FY2027 — planning cycle for the year starting October 1.
         Submitted(maya, 2027, BudgetCategory.Equipment, "Network core switch replacement",
             "The core switches reach end of vendor support in March 2027. Replacement must be procured early to allow a phased cut-over.",
             640_000m, 20, 18);
 
         Draft(maya, 2027, BudgetCategory.ProfessionalServices, "Service desk contract renewal",
-            "Three-year renewal of the outsourced after-hours service desk. Current contract expires 31 December 2026.",
+            "Three-year renewal of the outsourced after-hours service desk. Current contract expires December 31, 2026.",
             210_000m, 4);
 
         Draft(luis, 2027, BudgetCategory.Facilities, "Parking lot resurfacing, north campus",

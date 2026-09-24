@@ -58,7 +58,7 @@ public class BudgetRequestTests
         Assert.Equal(8_750m, request.RequestedAmount);
         var last = request.History.Last();
         Assert.Equal(AuditAction.Updated, last.Action);
-        Assert.Contains("10,000.00 → 8,750.00", last.Changes);
+        Assert.Contains("$10,000.00 → $8,750.00", last.Changes);
     }
 
     [Fact]

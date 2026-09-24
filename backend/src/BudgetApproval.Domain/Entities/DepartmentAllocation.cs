@@ -1,4 +1,3 @@
-using System.Globalization;
 using BudgetApproval.Domain.Common;
 
 namespace BudgetApproval.Domain.Entities;
@@ -46,8 +45,7 @@ public class DepartmentAllocation
         if (amount > RemainingAmount)
             throw new BusinessRuleException(
                 RuleCodes.AllocationExceeded,
-                string.Create(CultureInfo.InvariantCulture,
-                    $"Approving {amount:N2} would exceed the FY{FiscalYear} allocation. Only {RemainingAmount:N2} remains."));
+                $"Approving {Display.Money(amount)} would exceed the FY{FiscalYear} allocation. Only {Display.Money(RemainingAmount)} remains.");
 
         ApprovedAmount += amount;
         ConcurrencyStamp = Guid.NewGuid();
