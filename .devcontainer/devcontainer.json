@@ -1,0 +1,23 @@
+{
+  // Ready-to-run environment for GitHub Codespaces (and VS Code Dev Containers).
+  "name": "Budget Planning & Approval",
+  "image": "mcr.microsoft.com/devcontainers/dotnet:8.0",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "20" }
+  },
+  // Restore both halves once, when the codespace is created, so the run commands start immediately.
+  "postCreateCommand": "dotnet restore backend/BudgetApproval.sln && cd frontend && npm ci",
+  "forwardPorts": [4200, 5080],
+  "portsAttributes": {
+    "4200": { "label": "Web app", "onAutoForward": "openBrowser" },
+    "5080": { "label": "API (Swagger at /swagger)", "onAutoForward": "silent" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-dotnettools.csdevkit", "angular.ng-template", "editorconfig.editorconfig"]
+    },
+    "codespaces": {
+      "openFiles": ["README.md"]
+    }
+  }
+}

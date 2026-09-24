@@ -13,9 +13,26 @@ It is intentionally a **polished vertical slice**, not a platform: five entities
 
 All people, departments and amounts are invented.
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/KKoGit/budget-approval-system?quickstart=1)
+
+
 ---
 
-## Run it
+## Run it in GitHub Codespaces (nothing to install)
+
+Click **Open in GitHub Codespaces** above. GitHub builds a cloud workspace with .NET 8 and Node 20 and installs all dependencies (about two minutes the first time). Then open two terminals:
+
+```bash
+# Terminal 1: API
+cd backend/src/BudgetApproval.Api && dotnet run
+
+# Terminal 2: web app
+cd frontend && npm start
+```
+
+The web app opens in a new browser tab when it's ready. Each codespace is a private copy, so your changes don't affect anyone else, and it stops on its own when idle. Codespaces usage counts against the free monthly allowance of whoever opens it.
+
+## Run it locally
 
 **Prerequisites:** [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) and [Node.js 20+](https://nodejs.org/) (18.19+ works).
 
