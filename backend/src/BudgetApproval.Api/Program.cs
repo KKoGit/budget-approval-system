@@ -58,7 +58,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "Budget Planning & Approval API",
         Version = "v1",
-        Description = "Vertical slice for the fictional Ascencilla Regional Services Agency. " +
+        Description = "Vertical slice for the fictional Asencilla Regional Services Agency. " +
                       "Click Authorize and enter a demo user id (1–6) in the X-Demo-User header."
     });
     c.AddSecurityDefinition(DemoAuthenticationHandler.SchemeName, new OpenApiSecurityScheme

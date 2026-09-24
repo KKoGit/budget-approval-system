@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 namespace BudgetApproval.Infrastructure.Persistence;
 
 /// <summary>
-/// Seeds a fictional agency, the Ascencilla Regional Services Agency. All names, amounts and
+/// Seeds a fictional agency, the Asencilla Regional Services Agency. All names, amounts and
 /// e-mail addresses are invented.
 /// <para>
 /// Requests are created by calling the same domain methods the API uses (Create → Submit → Approve …),

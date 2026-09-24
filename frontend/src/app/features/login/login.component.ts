@@ -25,7 +25,7 @@ const WALKTHROUGH: Record<string, string> = {
         <span class="rail__seal" aria-hidden="true">AS</span>
         <div>
           <h1>Budget requests</h1>
-          <p>Ascencilla Regional Services Agency. This demo uses invented people and figures.</p>
+          <p>ASencilla Regional Services Agency. This demo uses invented people and figures.</p>
         </div>
       </header>
 

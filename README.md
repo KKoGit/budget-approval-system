@@ -3,7 +3,7 @@
 [![API](https://github.com/KKoGit/budget-approval-system/actions/workflows/api.yml/badge.svg)](https://github.com/KKoGit/budget-approval-system/actions/workflows/api.yml)
 [![Web](https://github.com/KKoGit/budget-approval-system/actions/workflows/web.yml/badge.svg)](https://github.com/KKoGit/budget-approval-system/actions/workflows/web.yml)
 
-A small, complete budget-request workflow for a fictional public agency, the **Ascencilla Regional Services Agency**. Departments draft and submit funding requests; the Budget Office approves (fully or in part), rejects, or returns them; every figure and every change is traceable.
+A small, complete budget-request workflow for a fictional public agency, the **Asencilla Regional Services Agency**. Departments draft and submit funding requests; the Budget Office approves (fully or in part), rejects, or returns them; every figure and every change is traceable.
 
 It is intentionally a **polished vertical slice**, not a platform: five entities, five screens, ten API endpoints, one workflow — built the way the full product would be built.
 
