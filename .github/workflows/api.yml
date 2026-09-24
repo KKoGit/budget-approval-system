@@ -1,0 +1,84 @@
+name: API
+
+# Builds and tests the ASP.NET Core API on every change; deploys to Azure App Service from main.
+on:
+  push:
+    branches: [main]
+    paths: ['backend/**', '.github/workflows/api.yml']
+  pull_request:
+    paths: ['backend/**', '.github/workflows/api.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: api-${{ github.ref }}
+  cancel-in-progress: false   # never interrupt a deployment halfway through
+
+env:
+  AZURE_WEBAPP_NAME: asencilla-budget-api-kpk
+  API_URL: https://asencilla-budget-api-kpk-h7akeagchccvdecu.westus3-01.azurewebsites.net
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release --logger "console;verbosity=normal"
+
+      - name: Publish
+        run: dotnet publish src/BudgetApproval.Api --no-build --configuration Release --output ../api-publish
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: api
+          path: api-publish
+          retention-days: 7
+
+  deploy:
+    needs: build-and-test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # lets the job request a short-lived OIDC token; no password is stored anywhere
+      contents: read
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: api
+          path: api-publish
+
+      - name: Sign in to Azure (OIDC federated credential)
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: api-publish
+
+      - name: Smoke test
+        # The Free plan starts the app on first request, so allow time for a cold start.
+        run: curl --fail --silent --show-error --retry 12 --retry-delay 10 --retry-all-errors "$API_URL/health"

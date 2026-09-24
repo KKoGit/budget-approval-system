@@ -5,12 +5,13 @@ import {
   ApprovalQueueItem, BudgetRequestDetail, BudgetRequestSummary, Dashboard, DecisionPayload, Lookups,
   PagedResult, RequestQuery, SaveRequestPayload, UserDto
 } from './models';
+import { API_ROOT } from './api-root';
 
 /** Typed client for the Budget Approval API. One method per endpoint; no business logic lives here. */
 @Injectable({ providedIn: 'root' })
 export class BudgetApiService {
   private readonly http = inject(HttpClient);
-  private readonly base = '/api';
+  private readonly base = API_ROOT;
   private lookups$?: Observable<Lookups>;
 
   demoUsers(): Observable<UserDto[]> {

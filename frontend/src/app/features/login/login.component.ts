@@ -6,12 +6,12 @@ import { SessionService } from '../../core/session.service';
 
 /** What each seeded persona is useful for when reviewing the demo. Keyed by e-mail so ids can change. */
 const WALKTHROUGH: Record<string, string> = {
-  'maya.chen@northbridge.example': 'Create a request, save it as a draft, then submit it.',
-  'luis.ortega@northbridge.example': 'Owns the roof repair that is larger than Facilities has left this year.',
-  'priya.natarajan@northbridge.example': 'Has a request returned for revision. Edit and resubmit it.',
-  'samuel.okafor@northbridge.example': 'Two requests waiting for a decision.',
-  'dana.whitfield@northbridge.example': 'Approver who also raises requests. Try approving her own survey platform request.',
-  'marcus.bell@northbridge.example': 'Budget Office approver. Work through the approval queue.'
+  'maya.chen@asencilla.example': 'Create a request, save it as a draft, then submit it.',
+  'luis.ortega@asencilla.example': 'Owns the roof repair that is larger than Facilities has left this year.',
+  'priya.natarajan@asencilla.example': 'Has a request returned for revision. Edit and resubmit it.',
+  'samuel.okafor@asencilla.example': 'Two requests waiting for a decision.',
+  'dana.whitfield@asencilla.example': 'Approver who also raises requests. Try approving her own survey platform request.',
+  'marcus.bell@asencilla.example': 'Budget Office approver. Work through the approval queue.'
 };
 
 @Component({
@@ -21,10 +21,10 @@ const WALKTHROUGH: Record<string, string> = {
   template: `
     <div class="sign-in">
       <header class="sign-in__head">
-        <span class="rail__seal" aria-hidden="true">NB</span>
+        <span class="rail__seal" aria-hidden="true">AS</span>
         <div>
           <h1>Budget requests</h1>
-          <p>Northbridge Regional Services Agency. This demo uses invented people and figures.</p>
+          <p>Asencilla Regional Services Agency. This demo uses invented people and figures.</p>
         </div>
       </header>
 

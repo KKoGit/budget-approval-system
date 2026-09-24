@@ -1,7 +1,9 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, throwError } from 'rxjs';
+import { catchError, finalize, throwError } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { API_ROOT } from './api-root';
 import { ApiError } from './models';
 import { NotificationService } from './notification.service';
 import { SessionService } from './session.service';
@@ -12,8 +14,25 @@ import { SessionService } from './session.service';
  */
 export const demoAuthInterceptor: HttpInterceptorFn = (req, next) => {
   const user = inject(SessionService).user();
-  if (!user || !req.url.startsWith('/api')) return next(req);
+  if (!user || !req.url.startsWith(API_ROOT)) return next(req);
   return next(req.clone({ setHeaders: { 'X-Demo-User': String(user.id) } }));
+};
+
+let coldStartNoticeShown = false;
+
+/**
+ * The hosted demo API runs on a free plan that sleeps when idle, so the first request can take 20–30 seconds.
+ * If a response is slow, say so once instead of leaving the page looking frozen. Off for local development.
+ */
+export const coldStartInterceptor: HttpInterceptorFn = (req, next) => {
+  if (!environment.coldStartNotice || coldStartNoticeShown || !req.url.startsWith(API_ROOT)) return next(req);
+  const notifications = inject(NotificationService);
+  const timer = setTimeout(() => {
+    if (coldStartNoticeShown) return;
+    coldStartNoticeShown = true;
+    notifications.info('Waking up the demo server. The first request after a quiet period can take up to 30 seconds.');
+  }, 4000);
+  return next(req).pipe(finalize(() => clearTimeout(timer)));
 };
 
 /**
@@ -36,7 +55,7 @@ export const apiErrorInterceptor: HttpInterceptorFn = (req, next) => {
         void router.navigate(['/sign-in']);
         notifications.info('Choose a user to continue.');
       } else if (response.status === 0) {
-        notifications.error('Cannot reach the API. Check that it is running on http://localhost:5080.');
+        notifications.error(`Cannot reach ${environment.apiDescription}. Check that it is running, then try again.`);
       } else if (response.status >= 500) {
         notifications.error(error.detail);
       } else if (response.status === 403) {

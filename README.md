@@ -1,6 +1,9 @@
 # Budget Planning & Approval — vertical slice
 
-A small, complete budget-request workflow for a fictional public agency, the **Northbridge Regional Services Agency**. Departments draft and submit funding requests; the Budget Office approves (fully or in part), rejects, or returns them; every figure and every change is traceable.
+[![API](https://github.com/KKoGit/budget-approval-system/actions/workflows/api.yml/badge.svg)](https://github.com/KKoGit/budget-approval-system/actions/workflows/api.yml)
+[![Web](https://github.com/KKoGit/budget-approval-system/actions/workflows/web.yml/badge.svg)](https://github.com/KKoGit/budget-approval-system/actions/workflows/web.yml)
+
+A small, complete budget-request workflow for a fictional public agency, the **Asencilla Regional Services Agency**. Departments draft and submit funding requests; the Budget Office approves (fully or in part), rejects, or returns them; every figure and every change is traceable.
 
 It is intentionally a **polished vertical slice**, not a platform: five entities, five screens, ten API endpoints, one workflow — built the way the full product would be built.
 
@@ -17,6 +20,16 @@ All people, departments and amounts are invented.
 
 
 ---
+
+## Live demo
+
+**[Open the app](https://kkogit.github.io/budget-approval-system/)** · [API and Swagger](https://asencilla-budget-api-kpk-h7akeagchccvdecu.westus3-01.azurewebsites.net/swagger)
+
+The Angular front end is hosted on GitHub Pages and the API on Azure App Service, both deployed by GitHub Actions on every push to `main` ([how it's deployed](docs/deployment.md)). A few things to know:
+
+- **The first load can take 20–30 seconds.** The API runs on Azure's free plan, which sleeps when idle; the app shows a notice while it wakes up.
+- **Sign-in is simulated.** Pick any person to see the app from their role.
+- **The data is shared and may be reset.** Everyone uses the same demo database, so earlier visitors' changes may show up. If the walkthrough below doesn't match, run it locally or in Codespaces for a clean copy.
 
 ## Run it in GitHub Codespaces (nothing to install)
 
@@ -107,12 +120,17 @@ Each step exercises one business rule.
 | [Testing](docs/testing.md) | Test strategy, rule-to-test map, what to automate next |
 | [Production roadmap](docs/production-roadmap.md) | Three phases from pilot to reporting, plus team shape |
 | [Limitations and tradeoffs](docs/limitations-and-tradeoffs.md) | Every shortcut, what it costs, and what would change it |
+| [Deployment](docs/deployment.md) | Azure App Service and GitHub Pages hosting, passwordless CI/CD, setup checklist, costs |
 
 ---
 
 ## Repository layout
 
 ```
+.github/workflows/
+  api.yml                           build, test, deploy the API to Azure App Service
+  web.yml                           build the front end, publish to GitHub Pages
+.devcontainer/                      GitHub Codespaces setup
 backend/
   BudgetApproval.sln
   src/
@@ -127,6 +145,7 @@ frontend/
     core/                           API client, session, scope, guards, interceptors
     shared/                         scope bar, status badge, allocation bar, toasts
     features/                       dashboard, requests (list/form/detail), approvals
+  src/environments/                 API address per build (local proxy vs hosted)
 docs/                               the documents listed above
 ```
 

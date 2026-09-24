@@ -9,7 +9,7 @@ Ordered by what unblocks a real pilot first. Each phase ends with something a Bu
 - **Identity:** OIDC with the agency identity provider; map app roles to Requester/Approver; remove demo auth, persona picker and `/api/demo/users`.
 - **Database:** SQL Server (Azure SQL or on-prem); replace `EnsureCreated` with EF Core migrations applied by the pipeline (`dotnet ef migrations add Initial`), not at app start-up; database login without `UPDATE`/`DELETE` on `AuditEntries`.
 - **Hosting:** single origin for SPA and API, HTTPS/HSTS, security headers, secrets from a vault via managed identity.
-- **CI/CD:** build, test, dependency scanning, deploy to test and production with approvals.
+- **CI/CD:** build, test, dependency scanning, deploy to test and production with approvals. (The demo already builds, tests and deploys with GitHub Actions and passwordless OIDC sign-in; see [deployment](deployment.md). Next: a test environment, dependency scanning and a manual approval before production.)
 - **Observability:** structured logs with trace ids (OpenTelemetry), health checks, alerts on 5xx and on 409 spikes.
 - **Tests:** API integration tests and a Playwright smoke suite (see [testing.md](testing.md)).
 - **Upgrade** to the current .NET LTS and Angular versions before go-live.

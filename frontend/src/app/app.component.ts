@@ -15,8 +15,8 @@ import { ToastHostComponent } from './shared/toast-host.component';
       <div class="shell">
         <nav class="rail" aria-label="Main">
           <div class="rail__brand">
-            <span class="rail__seal" aria-hidden="true">NB</span>
-            <span>Northbridge<br><small>Budget requests</small></span>
+            <span class="rail__seal" aria-hidden="true">AS</span>
+            <span>Asencilla<br><small>Budget requests</small></span>
           </div>
           <a routerLink="/dashboard" routerLinkActive="is-active">Overview</a>
           <a routerLink="/requests" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">Requests</a>

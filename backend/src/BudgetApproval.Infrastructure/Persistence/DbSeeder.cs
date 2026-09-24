@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 namespace BudgetApproval.Infrastructure.Persistence;
 
 /// <summary>
-/// Seeds a fictional agency, the Northbridge Regional Services Agency. All names, amounts and
+/// Seeds a fictional agency, the Asencilla Regional Services Agency. All names, amounts and
 /// e-mail addresses are invented.
 /// <para>
 /// Requests are created by calling the same domain methods the API uses (Create → Submit → Approve …),
@@ -32,14 +32,14 @@ public static class DbSeeder
         await db.SaveChangesAsync(ct);
 
         // ---------------------------------------------------------------- users
-        var maya = new AppUser("Maya Chen", "maya.chen@northbridge.example", its.Id, UserRole.Requester);
-        var luis = new AppUser("Luis Ortega", "luis.ortega@northbridge.example", fac.Id, UserRole.Requester);
-        var priya = new AppUser("Priya Natarajan", "priya.natarajan@northbridge.example", outreach.Id, UserRole.Requester);
-        var samuel = new AppUser("Samuel Okafor", "samuel.okafor@northbridge.example", hcm.Id, UserRole.Requester);
+        var maya = new AppUser("Maya Chen", "maya.chen@asencilla.example", its.Id, UserRole.Requester);
+        var luis = new AppUser("Luis Ortega", "luis.ortega@asencilla.example", fac.Id, UserRole.Requester);
+        var priya = new AppUser("Priya Natarajan", "priya.natarajan@asencilla.example", outreach.Id, UserRole.Requester);
+        var samuel = new AppUser("Samuel Okafor", "samuel.okafor@asencilla.example", hcm.Id, UserRole.Requester);
         // Dana heads Research & Analytics and holds delegated approval authority: she can raise requests AND approve
         // other departments' requests, which is exactly the situation the self-approval rule exists for.
-        var dana = new AppUser("Dana Whitfield", "dana.whitfield@northbridge.example", rsa.Id, UserRole.Requester | UserRole.Approver);
-        var marcus = new AppUser("Marcus Bell", "marcus.bell@northbridge.example", bud.Id, UserRole.Approver);
+        var dana = new AppUser("Dana Whitfield", "dana.whitfield@asencilla.example", rsa.Id, UserRole.Requester | UserRole.Approver);
+        var marcus = new AppUser("Marcus Bell", "marcus.bell@asencilla.example", bud.Id, UserRole.Approver);
         db.Users.AddRange(maya, luis, priya, samuel, dana, marcus);
         await db.SaveChangesAsync(ct);
 

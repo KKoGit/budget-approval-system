@@ -1,0 +1,62 @@
+name: Web
+
+# Builds the Angular front end on every change; publishes it to GitHub Pages from main.
+on:
+  push:
+    branches: [main]
+    paths: ['frontend/**', '.github/workflows/web.yml']
+  pull_request:
+    paths: ['frontend/**', '.github/workflows/web.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Build for GitHub Pages
+        # "github-pages" swaps in the Azure API address and sets the /budget-approval-system/ base path.
+        run: npx ng build --configuration production,github-pages
+
+      - name: Add single-page-app fallback
+        # Pages has no server-side rewrites; serving index.html as 404.html lets deep links like /requests/5 load.
+        run: cp dist/budget-approval-web/browser/index.html dist/budget-approval-web/browser/404.html
+
+      - uses: actions/upload-pages-artifact@v5
+        if: github.event_name != 'pull_request'
+        with:
+          path: frontend/dist/budget-approval-web/browser
+
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
