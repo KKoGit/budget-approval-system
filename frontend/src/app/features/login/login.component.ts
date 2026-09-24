@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { environment } from '../../../environments/environment';
 import { BudgetApiService } from '../../core/budget-api.service';
 import { UserDto } from '../../core/models';
 import { SessionService } from '../../core/session.service';
@@ -30,7 +31,10 @@ const WALKTHROUGH: Record<string, string> = {
 
       <h2 class="sign-in__prompt">Continue as</h2>
       @if (error()) {
-        <p class="callout callout--error">{{ error() }}</p>
+        <div class="callout callout--error" role="alert">
+          {{ error() }}
+          <button type="button" class="link-button" (click)="load()">Try again</button>
+        </div>
       }
       <ul class="personas">
         @for (user of users(); track user.id) {
@@ -60,9 +64,14 @@ export class LoginComponent {
   protected readonly error = signal<string | null>(null);
 
   constructor() {
+    this.load();
+  }
+
+  protected load(): void {
+    this.error.set(null);
     this.api.demoUsers().subscribe({
       next: users => this.users.set(users),
-      error: () => this.error.set('The API is not responding. Start it with "dotnet run" in backend/src/BudgetApproval.Api.')
+      error: () => this.error.set(environment.apiUnavailableHelp)
     });
   }
 
