@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <!-- Depends only on the domain. Persistence and HTTP concerns are reached through the interfaces in Abstractions/. -->
+  <ItemGroup>
+    <ProjectReference Include="..\BudgetApproval.Domain\BudgetApproval.Domain.csproj" />
+  </ItemGroup>
+</Project>

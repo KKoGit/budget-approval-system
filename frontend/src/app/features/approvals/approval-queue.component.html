@@ -1,0 +1,74 @@
+<header class="page-head">
+  <div>
+    <h1>Approval queue</h1>
+    <p class="muted">
+      @if (!state().loading) {
+        {{ items().length }} awaiting decision, {{ total() | currency:'USD':'symbol':'1.0-0' }} in total.
+        Oldest first.
+      } @else { Loading… }
+    </p>
+  </div>
+</header>
+
+@if (lookups(); as l) {
+  <app-scope-bar [lookups]="l" />
+}
+
+@if (state(); as s) {
+  @if (!s.loading && s.failed) {
+    <p class="callout callout--error">The queue couldn't be loaded. Try again in a moment.</p>
+  } @else if (!s.loading && items().length === 0) {
+    <div class="empty">
+      <h2>Nothing is waiting</h2>
+      <p class="muted">No submitted requests match this fiscal year and department. Try “All years” or all departments.</p>
+    </div>
+  } @else {
+    <div class="table-wrap" [class.is-loading]="s.loading">
+      <table class="data-table">
+        <caption class="visually-hidden">Requests awaiting a decision</caption>
+        <thead>
+          <tr>
+            <th scope="col">Request</th>
+            <th scope="col">Department</th>
+            <th scope="col" class="num">Requested</th>
+            <th scope="col">Department allocation</th>
+            <th scope="col" class="num">Waiting</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of items(); track item.request.id) {
+            <tr class="is-clickable" (click)="open(item)">
+              <td>
+                <a class="row-title" [routerLink]="['/requests', item.request.id]" (click)="$event.stopPropagation()">
+                  {{ item.request.title }}
+                </a>
+                <span class="row-sub">
+                  {{ item.request.referenceNumber }}, {{ categoryLabels[item.request.category] }}, {{ item.request.requestedByName }}
+                </span>
+                @if (item.isOwnRequest || item.exceedsRemaining) {
+                  <span class="flags">
+                    @if (item.isOwnRequest) { <span class="flag flag--own">Your request; another approver decides</span> }
+                    @if (item.exceedsRemaining) { <span class="flag flag--warn">Exceeds remaining allocation</span> }
+                  </span>
+                }
+              </td>
+              <td>{{ item.request.departmentName }}<span class="row-sub">FY{{ item.request.fiscalYear }}</span></td>
+              <td class="num">{{ item.request.requestedAmount | currency:'USD':'symbol':'1.0-0' }}</td>
+              <td class="queue-alloc">
+                <app-allocation-bar [allocated]="item.allocation.allocated" [approved]="item.allocation.approved"
+                                    [pending]="item.request.requestedAmount" [compact]="true" />
+                <span class="row-sub" [class.is-short]="item.exceedsRemaining">
+                  {{ item.allocation.remaining | currency:'USD':'symbol':'1.0-0' }} left
+                </span>
+              </td>
+              <td class="num">{{ item.daysWaiting }} {{ item.daysWaiting === 1 ? 'day' : 'days' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (!s.loading && decidable() < items().length) {
+      <p class="small muted">Requests you created are listed for visibility but must be decided by another approver.</p>
+    }
+  }
+}

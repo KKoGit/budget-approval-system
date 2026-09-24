@@ -1,0 +1,120 @@
+<header class="page-head">
+  <div>
+    <a class="back-link" [routerLink]="isEdit() ? ['/requests', id()] : '/requests'">
+      {{ isEdit() ? 'Back to request' : 'Back to requests' }}
+    </a>
+    <h1>{{ isEdit() ? 'Edit request' : 'New budget request' }}</h1>
+    @if (existing(); as e) {
+      <p class="muted">{{ e.summary.referenceNumber }}, {{ statusLabels[e.summary.status] }}</p>
+    } @else if (!isEdit()) {
+      <p class="muted">For {{ session.user()?.departmentName }}. You can save a draft and submit later.</p>
+    }
+  </div>
+</header>
+
+@if (loadError()) {
+  <p class="callout callout--error">{{ loadError() }}</p>
+} @else {
+  @if (existing()?.permissions?.canEdit === false) {
+    <p class="callout callout--info">
+      This request can't be edited because it is {{ statusLabels[existing()!.summary.status].toLowerCase() }}.
+      Only drafts and requests returned for revision can change.
+    </p>
+  }
+
+  @if (existing()?.summary?.status === 'ReturnedForRevision') {
+    @if (existing()!.history[0]; as last) {
+      <div class="callout callout--returned">
+        <strong>{{ last.actorName }} returned this request:</strong> {{ last.comment }}
+      </div>
+    }
+  }
+
+  <form class="form-layout" [formGroup]="form" (ngSubmit)="save(false)" novalidate>
+    <div class="form-main">
+      <div class="field-row">
+        <label class="field">
+          <span class="field__label">Fiscal year</span>
+          <select formControlName="fiscalYear">
+            @for (fy of lookups()?.fiscalYears ?? []; track fy) {
+              <option [ngValue]="fy">FY{{ fy }}</option>
+            }
+          </select>
+          <span class="field__help">FY{{ lookups()?.currentFiscalYear }} runs to 30 September.</span>
+        </label>
+
+        <label class="field">
+          <span class="field__label">Category</span>
+          <select formControlName="category" [attr.aria-invalid]="showError('category')">
+            <option [ngValue]="null" disabled>Choose a category</option>
+            @for (c of lookups()?.categories ?? []; track c) {
+              <option [ngValue]="c">{{ categoryLabels[c] }}</option>
+            }
+          </select>
+          @if (showError('category')) { <span class="field__error">Choose a category.</span> }
+        </label>
+      </div>
+
+      <label class="field">
+        <span class="field__label">Title</span>
+        <input type="text" formControlName="title" maxlength="120" [attr.aria-invalid]="showError('title')"
+               placeholder="What the money is for, in a few words">
+        @if (showError('title')) { <span class="field__error">Enter a title of up to 120 characters.</span> }
+      </label>
+
+      <label class="field">
+        <span class="field__label">Justification</span>
+        <textarea formControlName="justification" rows="7" [attr.aria-invalid]="showError('justification')"
+                  placeholder="The need, what happens if it is not funded, and how the amount was estimated"></textarea>
+        <span class="field__help" [class.field__error]="showError('justification')">
+          {{ justificationLength() }} of {{ limits.justificationMin }}–{{ limits.justificationMax }} characters
+        </span>
+      </label>
+
+      <label class="field field--amount">
+        <span class="field__label">Requested amount (USD)</span>
+        <span class="money-input">
+          <span aria-hidden="true">$</span>
+          <input type="number" inputmode="decimal" min="0.01" step="0.01" formControlName="requestedAmount"
+                 [attr.aria-invalid]="showError('requestedAmount')">
+        </span>
+        @if (showError('requestedAmount')) {
+          <span class="field__error">
+            @if (form.controls.requestedAmount.errors?.['precision']) { Use at most two decimal places. }
+            @else if (form.controls.requestedAmount.errors?.['max']) { A single request can't exceed $10,000,000. }
+            @else { Enter an amount greater than zero. }
+          </span>
+        }
+      </label>
+
+      @if (serverError(); as err) {
+        <div class="callout callout--error" role="alert">
+          {{ err.detail }}
+          @if (err.isConflict) { <a [routerLink]="['/requests', id()]">Open the latest version</a> }
+        </div>
+      }
+
+      <div class="actions">
+        <button type="submit" class="button" [disabled]="saving() || form.disabled">Save draft</button>
+        <button type="button" class="button button--primary" [disabled]="saving() || form.disabled" (click)="save(true)">
+          {{ existing()?.summary?.status === 'ReturnedForRevision' ? 'Save and resubmit' : 'Save and submit' }}
+        </button>
+      </div>
+    </div>
+
+    <aside class="form-aside">
+      <h2>Before you submit</h2>
+      @if (remaining() !== null) {
+        <p>
+          {{ session.user()?.departmentName }} has
+          <strong>{{ remaining() | currency:'USD':'symbol':'1.0-0' }}</strong>
+          left in FY{{ form.controls.fiscalYear.value }}.
+          @if ((formValue().requestedAmount ?? 0) > (remaining() ?? 0)) {
+            This request is larger, so it may only be approved in part.
+          }
+        </p>
+      }
+      <p>After you submit, the request is locked until an approver decides. If they return it, you can edit and resubmit it.</p>
+    </aside>
+  </form>
+}

@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <!-- No package references on purpose: business rules must not depend on EF Core, ASP.NET Core or any I/O. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="BudgetApproval.UnitTests" />
+  </ItemGroup>
+</Project>

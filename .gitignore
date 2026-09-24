@@ -1,0 +1,20 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+TestResults/
+*.db
+*.db-shm
+*.db-wal
+
+# Angular / Node
+node_modules/
+dist/
+.angular/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

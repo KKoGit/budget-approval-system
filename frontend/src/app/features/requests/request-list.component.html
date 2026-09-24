@@ -1,0 +1,102 @@
+<header class="page-head">
+  <div>
+    <h1>Budget requests</h1>
+    <p class="muted">
+      @if (result(); as r) { {{ r.totalCount }} {{ r.totalCount === 1 ? 'request' : 'requests' }} } @else { Loading… }
+    </p>
+  </div>
+  @if (session.isRequester()) {
+    <a class="button button--primary" routerLink="/requests/new">New request</a>
+  }
+</header>
+
+@if (lookups(); as l) {
+  <app-scope-bar [lookups]="l" />
+
+  <div class="filters">
+    <label>
+      <span>Search</span>
+      <input type="search" placeholder="Title, justification or BR-2026-0005"
+             [value]="search()" (input)="setSearch($any($event.target).value)">
+    </label>
+    <label>
+      <span>Status</span>
+      <select (change)="setStatus($any($event.target).value)">
+        <option value="" [selected]="!status()">Any status</option>
+        @for (s of l.statuses; track s) {
+          <option [value]="s" [selected]="status() === s">{{ statusLabels[s] }}</option>
+        }
+      </select>
+    </label>
+    <label>
+      <span>Category</span>
+      <select (change)="setCategory($any($event.target).value)">
+        <option value="" [selected]="!category()">Any category</option>
+        @for (c of l.categories; track c) {
+          <option [value]="c" [selected]="category() === c">{{ categoryLabels[c] }}</option>
+        }
+      </select>
+    </label>
+    @if (hasFilters()) {
+      <button type="button" class="link-button filters__clear" (click)="clearFilters()">Clear filters</button>
+    }
+  </div>
+}
+
+<div class="table-wrap" [class.is-loading]="loading()">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th scope="col" [attr.aria-sort]="ariaSort('title')"><button type="button" (click)="sort('title')">Request</button></th>
+        <th scope="col" [attr.aria-sort]="ariaSort('department')"><button type="button" (click)="sort('department')">Department</button></th>
+        <th scope="col">Category</th>
+        <th scope="col" class="num" [attr.aria-sort]="ariaSort('amount')"><button type="button" (click)="sort('amount')">Requested</button></th>
+        <th scope="col" [attr.aria-sort]="ariaSort('status')"><button type="button" (click)="sort('status')">Status</button></th>
+        <th scope="col" [attr.aria-sort]="ariaSort('updated')"><button type="button" (click)="sort('updated')">Last change</button></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (r of result()?.items ?? []; track r.id) {
+        <tr class="is-clickable" (click)="open(r.id)">
+          <td>
+            <a [routerLink]="['/requests', r.id]" (click)="$event.stopPropagation()" class="row-title">{{ r.title }}</a>
+            <span class="row-sub">{{ r.referenceNumber }}, {{ r.requestedByName }}</span>
+          </td>
+          <td>{{ r.departmentName }}</td>
+          <td>{{ categoryLabels[r.category] }}</td>
+          <td class="num">
+            {{ r.requestedAmount | currency:'USD':'symbol':'1.0-0' }}
+            @if (r.approvedAmount !== null && r.approvedAmount !== r.requestedAmount) {
+              <span class="row-sub">{{ r.approvedAmount | currency:'USD':'symbol':'1.0-0' }} approved</span>
+            }
+          </td>
+          <td><app-status-badge [status]="r.status" /></td>
+          <td>{{ r.updatedAtUtc | date:'mediumDate' }}</td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="6" class="empty">
+            @if (!loading()) {
+              @if (hasFilters()) {
+                No requests match these filters. <button type="button" class="link-button" (click)="clearFilters()">Clear filters</button>
+              } @else {
+                No requests for this fiscal year and department yet.
+                @if (session.isRequester()) { <a routerLink="/requests/new">Create one</a> }
+              }
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+@if (result(); as r) {
+  @if (r.totalPages > 1) {
+    <nav class="pager" aria-label="Pages">
+      <button type="button" class="button" [disabled]="page() <= 1" (click)="page.set(page() - 1)">Previous</button>
+      <span>Page {{ r.page }} of {{ r.totalPages }}</span>
+      <button type="button" class="button" [disabled]="page() >= r.totalPages" (click)="page.set(page() + 1)">Next</button>
+    </nav>
+  }
+}

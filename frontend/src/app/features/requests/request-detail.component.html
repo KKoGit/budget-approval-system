@@ -1,0 +1,143 @@
+<a class="back-link" routerLink="/requests">Back to requests</a>
+
+@if (loadError()) {
+  <p class="callout callout--error">{{ loadError() }}</p>
+}
+
+@if (detail(); as d) {
+  <header class="page-head">
+    <div>
+      <p class="muted">{{ d.summary.referenceNumber }}</p>
+      <h1>{{ d.summary.title }}</h1>
+      <app-status-badge [status]="d.summary.status" />
+    </div>
+    <div class="actions">
+      @if (d.permissions.canEdit) {
+        <a class="button" [routerLink]="['/requests', d.summary.id, 'edit']">Edit</a>
+      }
+      @if (d.permissions.canSubmit) {
+        <button type="button" class="button button--primary" [disabled]="busy()" (click)="submit()">
+          {{ d.summary.status === 'ReturnedForRevision' ? 'Resubmit' : 'Submit for approval' }}
+        </button>
+      }
+    </div>
+  </header>
+
+  @if (actionError(); as err) {
+    <div class="callout callout--error" role="alert">
+      {{ err.detail }}
+      @if (err.isConflict) {
+        <button type="button" class="link-button" (click)="reload()">Reload the latest version</button>
+      }
+    </div>
+  }
+
+  @if (d.summary.status === 'ReturnedForRevision' && d.history.length > 0 && d.history[0].comment) {
+    <div class="callout callout--returned">
+      <strong>{{ d.history[0].actorName }} returned this request:</strong> {{ d.history[0].comment }}
+    </div>
+  }
+
+  <div class="detail-grid">
+    <div class="detail-main">
+      <section class="panel" aria-labelledby="facts">
+        <h2 id="facts">Request</h2>
+        <dl class="facts">
+          <div><dt>Department</dt><dd>{{ d.summary.departmentName }}</dd></div>
+          <div><dt>Fiscal year</dt><dd>FY{{ d.summary.fiscalYear }}</dd></div>
+          <div><dt>Category</dt><dd>{{ categoryLabels[d.summary.category] }}</dd></div>
+          <div><dt>Requested by</dt><dd>{{ d.summary.requestedByName }}</dd></div>
+          <div><dt>Requested</dt><dd class="num">{{ d.summary.requestedAmount | currency:'USD' }}</dd></div>
+          <div>
+            <dt>Approved</dt>
+            <dd class="num">{{ d.summary.approvedAmount === null ? '—' : (d.summary.approvedAmount | currency:'USD') }}</dd>
+          </div>
+          <div><dt>Submitted</dt><dd>{{ d.summary.submittedAtUtc ? (d.summary.submittedAtUtc | date:'MMM d, y') : 'Not yet' }}</dd></div>
+          <div><dt>Decided</dt><dd>{{ d.decidedAtUtc ? (d.decidedAtUtc | date:'MMM d, y') : '—' }}</dd></div>
+        </dl>
+        <h3>Justification</h3>
+        <p class="justification">{{ d.justification }}</p>
+      </section>
+
+      <section class="panel" aria-labelledby="history">
+        <h2 id="history">History</h2>
+        <ol class="timeline">
+          @for (h of d.history; track h.id) {
+            <li class="timeline__item timeline__item--{{ h.action }}">
+              <div class="timeline__head">
+                <strong>{{ actionLabels[h.action] }}</strong>
+                <span class="muted">by {{ h.actorName }}</span>
+                <time class="timeline__time muted small" [attr.datetime]="h.occurredAtUtc">
+                  {{ h.occurredAtUtc | date:'MMM d, y, h:mm a' }}
+                </time>
+              </div>
+              @if (h.fromStatus && h.fromStatus !== h.toStatus) {
+                <p class="small muted">{{ statusLabels[h.fromStatus] }} to {{ statusLabels[h.toStatus] }}</p>
+              }
+              @if (h.changes) { <p class="small timeline__changes">{{ h.changes }}</p> }
+              @if (h.comment) { <blockquote class="timeline__comment">{{ h.comment }}</blockquote> }
+            </li>
+          }
+        </ol>
+        <p class="small muted">History entries are written with every change and can't be edited or deleted.</p>
+      </section>
+    </div>
+
+    <aside class="detail-aside">
+      @if (d.allocation; as a) {
+        <section class="panel" aria-labelledby="alloc-head">
+          <h2 id="alloc-head">{{ d.summary.departmentName }}, FY{{ d.summary.fiscalYear }}</h2>
+          <app-allocation-bar [allocated]="a.allocated" [approved]="a.approved"
+                              [pending]="d.summary.status === 'Submitted' ? d.summary.requestedAmount : 0" />
+          @if (d.summary.status === 'Submitted' && d.summary.requestedAmount > a.remaining) {
+            <p class="callout callout--warn small">
+              This request is {{ d.summary.requestedAmount - a.remaining | currency:'USD':'symbol':'1.0-0' }} more than
+              the department has left. It can be approved for at most {{ a.remaining | currency:'USD' }}.
+            </p>
+          }
+        </section>
+      }
+
+      @if (d.permissions.decisionBlockedReason) {
+        <p class="callout callout--info">{{ d.permissions.decisionBlockedReason }}</p>
+      }
+
+      @if (d.permissions.canDecide) {
+        <section class="panel decision" aria-labelledby="decide-head">
+          <h2 id="decide-head">Your decision</h2>
+          <form [formGroup]="decisionForm" (ngSubmit)="decide('Approve')" novalidate>
+            <label class="field field--amount">
+              <span class="field__label">Amount to approve (USD)</span>
+              <span class="money-input">
+                <span aria-hidden="true">$</span>
+                <input type="number" inputmode="decimal" min="0.01" step="0.01" formControlName="approvedAmount">
+              </span>
+              @if (decisionHints().partial) {
+                <span class="field__help">Partial approval; a comment is required.</span>
+              }
+              @if (decisionHints().overRequested) {
+                <span class="field__error">Can't exceed the requested {{ detail()?.summary?.requestedAmount | currency:'USD' }}.</span>
+              } @else if (decisionHints().overRemaining) {
+                <span class="field__error">More than the {{ detail()?.allocation?.remaining | currency:'USD' }} remaining; the API will refuse it.</span>
+              }
+            </label>
+            <label class="field">
+              <span class="field__label">Comment</span>
+              <textarea formControlName="comment" rows="4" maxlength="1000"
+                        placeholder="Required when rejecting, returning or approving in part"></textarea>
+            </label>
+            <div class="decision__buttons">
+              <button type="submit" class="button button--primary" [disabled]="busy()">
+                {{ decisionHints().partial ? 'Approve in part' : 'Approve' }}
+              </button>
+              <button type="button" class="button" [disabled]="busy()" (click)="decide('Return')">Return for revision</button>
+              <button type="button" class="button button--danger" [disabled]="busy()" (click)="decide('Reject')">Reject</button>
+            </div>
+          </form>
+        </section>
+      }
+    </aside>
+  </div>
+} @else if (!loadError()) {
+  <p class="muted">Loading request…</p>
+}

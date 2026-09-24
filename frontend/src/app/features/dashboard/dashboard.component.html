@@ -1,0 +1,90 @@
+<header class="page-head">
+  <div>
+    <h1>Budget overview</h1>
+    <p class="muted">{{ heading() }}</p>
+  </div>
+  @if (session.isRequester()) {
+    <a class="button button--primary" routerLink="/requests/new">New request</a>
+  }
+</header>
+
+@if (lookups(); as l) {
+  <app-scope-bar [lookups]="l" />
+}
+
+@if (data(); as d) {
+  <section class="ledger" aria-label="Totals">
+    <div class="ledger__row">
+      <div class="figure">
+        <span class="figure__label">Allocated</span>
+        <span class="figure__value">{{ d.allocated | currency:'USD':'symbol':'1.0-0' }}</span>
+      </div>
+      <div class="figure">
+        <span class="figure__label">Requested</span>
+        <span class="figure__value">{{ d.requested | currency:'USD':'symbol':'1.0-0' }}</span>
+        <span class="figure__note">submitted or approved</span>
+      </div>
+      <div class="figure">
+        <span class="figure__label">Approved</span>
+        <span class="figure__value">{{ d.approved | currency:'USD':'symbol':'1.0-0' }}</span>
+        <span class="figure__note">{{ usedPct() }}% of allocation</span>
+      </div>
+      <div class="figure figure--remaining">
+        <span class="figure__label">Remaining</span>
+        <span class="figure__value">{{ d.remaining | currency:'USD':'symbol':'1.0-0' }}</span>
+        <span class="figure__note">
+          {{ d.pending | currency:'USD':'symbol':'1.0-0' }} pending in {{ d.pendingCount }} {{ d.pendingCount === 1 ? 'request' : 'requests' }}
+        </span>
+      </div>
+    </div>
+    <app-allocation-bar [allocated]="d.allocated" [approved]="d.approved" [pending]="d.pending" />
+  </section>
+
+  @if (overcommitted().length && session.isApprover()) {
+    <p class="callout callout--warn">
+      Pending requests exceed what remains for
+      @for (o of overcommitted(); track o.departmentId; let last = $last) {
+        <strong>{{ o.name }}</strong>{{ last ? '.' : ', ' }}
+      }
+      Some of these can only be approved in part.
+      <a routerLink="/approvals">Review the queue</a>
+    </p>
+  }
+
+  <div class="dash-grid">
+    <section class="panel" aria-labelledby="by-dept">
+      <h2 id="by-dept">By department</h2>
+      @for (dept of d.departments; track dept.departmentId) {
+        <div class="dept-row">
+          <div class="dept-row__head">
+            <span class="dept-row__name">{{ dept.name }}</span>
+            <span class="dept-row__amount">{{ dept.remaining | currency:'USD':'symbol':'1.0-0' }} left</span>
+          </div>
+          <app-allocation-bar [allocated]="dept.allocated" [approved]="dept.approved" [pending]="dept.pending" />
+        </div>
+      } @empty {
+        <p class="muted">No allocations exist for this selection.</p>
+      }
+    </section>
+
+    <section class="panel" aria-labelledby="by-status">
+      <h2 id="by-status">Requests by status</h2>
+      <dl class="status-list">
+        @for (row of statusRows(); track row.status) {
+          <div class="status-list__row">
+            <dt><span class="dot dot--{{ row.status }}"></span>{{ row.label }}</dt>
+            <dd>{{ row.count }}</dd>
+          </div>
+        }
+      </dl>
+      <a routerLink="/requests" class="small">See all requests</a>
+      @if (session.isApprover() && d.pendingCount > 0) {
+        <a class="button button--primary button--block" routerLink="/approvals">
+          Review {{ d.pendingCount }} awaiting decision
+        </a>
+      }
+    </section>
+  </div>
+} @else {
+  <p class="muted">Loading figures…</p>
+}
