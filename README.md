@@ -19,6 +19,22 @@ All people, departments and amounts are invented.
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/KKoGit/budget-approval-system?quickstart=1)
 
 
+## Screenshots
+
+**Dashboard.** Allocated, requested, approved and remaining for the fiscal year, with one allocation bar per department. Facilities & Fleet shows a pending request that is larger than what the department has left.
+
+![Budget overview dashboard for FY2026, showing totals and an allocation bar for each department](docs/images/dashboard.png)
+
+**Request detail with history.** An approver's view of the roof repair: the department's allocation, a warning that the request exceeds what remains, the decision panel, and the audit history.
+
+![Request detail page for the emergency roof repair, with allocation warning, decision panel and history](docs/images/request-detail.png)
+
+**Approval queue.** Everything awaiting a decision, oldest first, with each department's remaining allocation and a flag on requests that exceed it.
+
+![Approval queue listing three requests awaiting a decision](docs/images/approval-queue.png)
+
+<sub>Screenshots show the demo data the API seeds, viewed as Marcus Bell, a Budget Office approver.</sub>
+
 ---
 
 ## Live demo
@@ -94,7 +110,41 @@ Each step exercises one business rule.
 
 ---
 
-## What's worth looking at
+## How it's built
+
+A guide to the setup, with links to the files that show each part.
+
+### API (ASP.NET Core 8)
+
+- **Four projects with one-way dependencies.** `Domain` holds entities and business rules and depends on nothing. `Application` holds use-case services, DTOs and repository interfaces, and depends only on `Domain`. `Infrastructure` implements those interfaces with EF Core. `Api` is the thin web layer on top. → [`BudgetApproval.sln`](backend/BudgetApproval.sln)
+- **All wiring in one place.** `Program.cs` registers the services, picks the database provider from configuration, sets a fallback authorization policy so every endpoint requires sign-in unless marked otherwise, adds an `Approver` policy, reads allowed CORS origins from configuration, and configures Swagger. → [`Program.cs`](backend/src/BudgetApproval.Api/Program.cs), [`DependencyInjection.cs`](backend/src/BudgetApproval.Infrastructure/DependencyInjection.cs)
+- **Thin controllers.** Each action validates input and calls one application service; no business logic lives in controllers. → [`BudgetRequestsController.cs`](backend/src/BudgetApproval.Api/Controllers/BudgetRequestsController.cs), [`ApprovalsController.cs`](backend/src/BudgetApproval.Api/Controllers/ApprovalsController.cs)
+- **One global error handler.** Business-rule violations become 422, stale versions 409, forbidden actions 403, hidden or missing records 404, and unexpected errors a generic 500. Every response is RFC 9457 problem details with a stable `code` the client can act on. → [`ApiExceptionHandler.cs`](backend/src/BudgetApproval.Api/Infrastructure/ApiExceptionHandler.cs)
+- **EF Core configured deliberately.** Enums are stored as strings, check constraints and indexes match the queries, concurrency tokens detect conflicting writes, and `SaveChanges` refuses to modify or delete audit entries. The same model runs on SQLite or SQL Server. → [`BudgetDbContext.cs`](backend/src/BudgetApproval.Infrastructure/Persistence/BudgetDbContext.cs)
+- **Repositories and a unit of work.** Database concurrency exceptions are translated into an application-level conflict, so the API layer never references EF Core. → [`OtherRepositories.cs`](backend/src/BudgetApproval.Infrastructure/Repositories/OtherRepositories.cs)
+- **Pluggable authentication.** A small demo handler turns an `X-Demo-User` header into claims; swapping in Microsoft Entra ID means replacing this handler, not the controllers. The API refuses to run it outside Development unless explicitly allowed. → [`DemoAuthenticationHandler.cs`](backend/src/BudgetApproval.Api/Auth/DemoAuthenticationHandler.cs)
+- **Swagger you can use.** The Authorize button accepts a demo user ID, so every endpoint can be tried as any role. → [live Swagger](https://asencilla-budget-api-kpk-h7akeagchccvdecu.westus3-01.azurewebsites.net/swagger)
+
+### Front end (Angular 18, TypeScript)
+
+- **Standalone components, signals and OnPush change detection** throughout, with no NgModules. Feature screens are lazy-loaded routes. → [`app.routes.ts`](frontend/src/app/app.routes.ts), [`app.config.ts`](frontend/src/app/app.config.ts)
+- **A typed API client.** One service method per endpoint, returning typed observables; reference data is fetched once and shared. The TypeScript models mirror the API contracts. → [`budget-api.service.ts`](frontend/src/app/core/budget-api.service.ts), [`models.ts`](frontend/src/app/core/models.ts)
+- **Three HTTP interceptors, in order.** One shows a notice if the hosted API is waking up, one attaches the signed-in identity, and one turns every failure into a typed `ApiError` and handles sign-out, connection and server errors centrally. → [`interceptors.ts`](frontend/src/app/core/interceptors.ts)
+- **Route guards** for signed-in users, approver-only and requester-only screens, and a warning before leaving a form with unsaved changes. → [`guards.ts`](frontend/src/app/core/guards.ts)
+- **Typed reactive forms with a custom validator** (amounts limited to two decimal places), plus a clear message when the API rejects a save, such as a stale version or a broken business rule. → [`request-form.component.ts`](frontend/src/app/features/requests/request-form.component.ts)
+- **Shared state with signals.** The fiscal-year and department filter is one service used by the dashboard, list and queue, so every screen shows the same scope. → [`scope.service.ts`](frontend/src/app/core/scope.service.ts)
+- **Reusable presentational components**, such as the allocation bar, which rescales to show demand beyond the budget. → [`allocation-bar.component.ts`](frontend/src/app/shared/allocation-bar.component.ts)
+- **Environment-based configuration.** Local development calls `/api` through the dev-server proxy; the GitHub Pages build swaps in the Azure address and base path at build time. → [`proxy.conf.json`](frontend/proxy.conf.json), [`environment.github-pages.ts`](frontend/src/environments/environment.github-pages.ts), [`angular.json`](frontend/angular.json)
+
+### Delivery (GitHub Actions and Azure)
+
+- **API pipeline:** build, run all tests, publish, sign in to Azure with OIDC (no stored password), deploy to App Service, then smoke-test `/health`. → [`api.yml`](.github/workflows/api.yml)
+- **Web pipeline:** build the Angular app for GitHub Pages and publish it. → [`web.yml`](.github/workflows/web.yml)
+- **Decisions and setup steps** are written up in [docs/deployment.md](docs/deployment.md).
+
+---
+
+## Design decisions worth a look
 
 **Business rules live in the domain, not in controllers.** `BudgetRequest` is a small state machine with no public setters; every transition validates its rule, appends an audit entry and issues a new version. There is no code path that changes a request without auditing it. → [`BudgetRequest.cs`](backend/src/BudgetApproval.Domain/Entities/BudgetRequest.cs)
 
